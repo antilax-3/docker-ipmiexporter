@@ -10,7 +10,7 @@ RUN \
  echo "**** build go application ****" && \
  mkdir -p src/github.com/lovoo/ && cd src/github.com/lovoo/ && \
  git clone https://github.com/lovoo/ipmi_exporter && \
- cd ipmi_exporter && make build
+ cd ipmi_exporter && GO111MODULE=auto make build
 
 FROM antilax3/alpine
 

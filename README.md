@@ -45,4 +45,5 @@ To ensure that ipmi-exporter can retrieve and expose metrics you need to mount y
 ```
 
 ## Version
+- **19/02/21:** Set GO111MODULE to prevent go.mod compilation issues
 - **17/04/19:** Initial Release
