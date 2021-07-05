@@ -9,13 +9,13 @@
 ```
 docker create --name=ipmiexporter \
 --device=/dev/ipmi0:/dev/ipmi0 \
--p 9289:9289 \
+-p 9290:9290 \
 antilax3/ipmi-exporter
 ```
 ## Parameters
 The parameters are split into two halves, separated by a colon, the left hand side representing the host and the right the container side. For example with a volume -v external:internal - what this shows is the volume mapping from internal to external of the container. So -v /mnt/app/config:/config would map /config from inside the container to be accessible from /mnt/app/config on the host's filesystem.
 
-- `-p 9289` - HTTP port for webserver
+- `-p 9290` - HTTP port for webserver
 - `-e PUID` - for UserID, see below for explanation
 - `-e PGID` - for GroupID, see below for explanation
 - `-e TZ` - for setting timezone information, eg Australia/Melbourne
@@ -41,9 +41,10 @@ To ensure that ipmi-exporter can retrieve and expose metrics you need to mount y
       - /dev/ipmi0:/dev/ipmi0
     restart: unless-stopped
     ports:
-      - 9289:9289
+      - 9290:9290
 ```
 
 ## Version
+- **05/07/21:** Swap to soundcloud/ipmi_exporter and FreeIPMI
 - **19/02/21:** Set GO111MODULE to prevent go.mod compilation issues
 - **17/04/19:** Initial Release
