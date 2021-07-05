@@ -1,25 +1,4 @@
-FROM golang:alpine AS builder
-
-ENV CGO_ENABLED=0
-
-RUN \
- echo "**** install build dependencies ****" && \
- apk update && apk add --no-cache git make
-
-RUN \
- echo "**** build go application ****" && \
- mkdir -p src/github.com/lovoo/ && cd src/github.com/lovoo/ && \
- git clone https://github.com/lovoo/ipmi_exporter && \
- cd ipmi_exporter && GO111MODULE=auto make build
-
 FROM antilax3/alpine
-
-RUN \
-echo "**** install runtime packages ****" && \
-apk add --no-cache ipmitool
-
-# copy executable and config
-COPY --from=builder /go/src/github.com/lovoo/ipmi_exporter/build/ipmi_exporter/ipmi_exporter /app/ipmi_exporter
 
 # set version label
 ARG build_date
@@ -28,11 +7,43 @@ LABEL build_date=$build_date
 LABEL version=$version
 LABEL maintainer="Nightah"
 
+# set application versions
+ARG ARCH="amd64"
+ARG IPMIEXPORTER_VERSION="1.4.0"
+ARG FREEIPMI_VER="1.6.4"
+
 # set working directory
 WORKDIR /app
 
 # copy local files
 COPY root/ /
 
+COPY freeipmi-argp-redefine.patch /tmp/freeipmi-${FREEIPMI_VER}/
+
+RUN \
+echo "**** install build packages ****" && \
+    apk add --no-cache --virtual=build-dependencies \
+	curl \
+	gcc \
+	libgcrypt-dev \
+	make \
+	musl-dev \
+	patch && \
+echo "**** install runtime packages ****" && \
+    cd /tmp && \
+    curl -Lfs -o ipmi_exporter.tar.gz https://github.com/soundcloud/ipmi_exporter/releases/download/v${IPMIEXPORTER_VERSION}/ipmi_exporter-${IPMIEXPORTER_VERSION}.linux-${ARCH}.tar.gz && \
+    tar xfz ipmi_exporter.tar.gz -C /app --strip-components 1 && \
+    curl -Lfs -o freeipmi.tar.gz https://ftp.gnu.org/gnu/freeipmi/freeipmi-${FREEIPMI_VER}.tar.gz && \
+    tar xfz freeipmi.tar.gz && \
+    cd freeipmi-${FREEIPMI_VER} && \
+    patch -p 0 < freeipmi-argp-redefine.patch && \
+    CPPFLAGS="-Dgetmsg\(a,b,c,d\)=errno=-1,-1 -Dputmsg\(a,b,c,d\)=errno=-1,-1" ./configure && \
+    make && \
+    make install && \
+echo "**** Cleanup ****" && \
+    apk del --purge \
+	build-dependencies && \
+    rm -rf /tmp/*
+
 # ports and volumes
-EXPOSE 9289
+EXPOSE 9290
