@@ -45,6 +45,7 @@ To ensure that ipmi-exporter can retrieve and expose metrics you need to mount y
 ```
 
 ## Version
+- **04/07/25:** Updated to use alpine 3.22 image and s6 v3 service structure
 - **05/07/21:** Swap to soundcloud/ipmi_exporter and FreeIPMI
 - **19/02/21:** Set GO111MODULE to prevent go.mod compilation issues
 - **17/04/19:** Initial Release
