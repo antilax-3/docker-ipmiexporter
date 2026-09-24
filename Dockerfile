@@ -34,12 +34,13 @@ FREEIPMI_TARBALL="freeipmi-${FREEIPMI_VERSION}.tar.gz"
 
 echo "**** install runtime packages ****"
 apk add --no-cache \
-  libgcrypt-dev
+  libgcrypt
 
 echo "**** install build packages ****"
 apk add --no-cache --virtual=build-dependencies \
   curl \
   gcc \
+  libgcrypt-dev \
   make \
   musl-dev \
   patch

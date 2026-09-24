@@ -17,7 +17,7 @@ esac
 case "${VARIANT}" in
   alpine)
     OS_ID="alpine"; LIBC="musl"; INTERPRETER="/lib/ld-musl-*"
-    RUNTIME_PACKAGES="libgcrypt-dev"; BUILD_PACKAGES="curl gcc make musl-dev patch"
+    RUNTIME_PACKAGES="libgcrypt"; BUILD_PACKAGES="curl gcc libgcrypt-dev make musl-dev patch"
     ;;
 esac
 
