@@ -10,7 +10,7 @@ LABEL maintainer="Nightah"
 # set application versions
 ARG ARCH="amd64"
 ARG IPMIEXPORTER_VERSION="1.10.0"
-ARG FREEIPMI_VER="1.6.15"
+ARG FREEIPMI_VER="1.6.19"
 
 # set working directory
 WORKDIR /app
