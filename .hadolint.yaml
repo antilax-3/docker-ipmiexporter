@@ -7,7 +7,7 @@ ignored:
   # The base image is deliberately followed at latest and not pinned, so every build picks up its changes without
   # a bump in this repository.
   - DL3007
-  # The single RUN step cds into the unpacked freeipmi source to configure and build it. The rule goes away when that
-  # step is restructured, rather than by rewriting it here.
+  # The install step configures freeipmi from inside its unpacked source, and a WORKDIR would carry that build
+  # directory into the image's config.
   - DL3003
 ...

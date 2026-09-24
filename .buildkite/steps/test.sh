@@ -22,7 +22,7 @@ case "${VARIANT}" in
 esac
 
 REVISION="${BUILDKITE_COMMIT}"
-FREEIPMI_RELEASE=$(sed -nE 's/^ARG FREEIPMI_VER="(.*)"$/\1/p' "${DOCKERFILE}")
+FREEIPMI_RELEASE=$(sed -nE 's/^ARG FREEIPMI_VERSION="(.*)"$/\1/p' "${DOCKERFILE}")
 # The freeipmi tools ipmi_exporter shells out to, one per collector.
 FREEIPMI_TOOLS="bmc-info ipmi-chassis ipmi-dcmi ipmi-raw ipmi-sel ipmi-sensors ipmimonitoring"
 MARKER="__TEST_OUTPUT__"
