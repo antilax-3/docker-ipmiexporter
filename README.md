@@ -62,6 +62,12 @@ with:
 lefthook run pre-commit --all-files
 ```
 
+### Bumping ipmi_exporter and FreeIPMI
+
+`IPMIEXPORTER_VERSION` and `FREEIPMI_VER` are managed by renovate. ipmi_exporter resolves through its GitHub
+releases, and FreeIPMI through the release listing on [ftp.gnu.org](https://ftp.gnu.org/gnu/freeipmi/), which is
+also where the Dockerfile downloads it from. The image tags follow the ipmi_exporter release.
+
 ## Version
 - **04/07/25:** Updated to use alpine 3.22 image and s6 v3 service structure
 - **05/07/21:** Swap to soundcloud/ipmi_exporter and FreeIPMI

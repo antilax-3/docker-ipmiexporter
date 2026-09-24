@@ -77,7 +77,7 @@ sanitize_tag() {
 #   BUILD_TAG - the build-scoped tag, e.g. BK12, also used as the version label/build arg
 #   IMAGE     - the fully qualified build-scoped image the test step pulls
 #   TAGS      - the tags pushed for the build context, following antilax-3/docker-baseimage-alpine:
-#                 local branch -> <branch> with unsafe characters replaced, e.g. renovate/ipmi_exporter-1.x -> renovate-ipmi_exporter-1.x
+#                 local branch -> <branch> with unsafe characters replaced, e.g. renovate/ipmi_exporter-1.10.x -> renovate-ipmi_exporter-1.10.x
 #                 fork PRs     -> PR<number> (Buildkite prefixes fork branch names with owner:)
 #                 master       -> latest, <major>, <series> and <release>, e.g. latest 1 1.10 1.10.0
 #               and always BK<build>
