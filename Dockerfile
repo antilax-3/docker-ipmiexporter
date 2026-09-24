@@ -9,7 +9,6 @@ LABEL version="${version}"
 LABEL maintainer="Nightah"
 
 # set versions for ipmi_exporter and freeipmi
-ARG ARCH="amd64"
 # renovate: datasource=github-releases depName=ipmi_exporter packageName=prometheus-community/ipmi_exporter
 ARG IPMIEXPORTER_VERSION="1.10.0"
 # renovate: datasource=custom.freeipmi depName=freeipmi
@@ -26,8 +25,15 @@ SHELL ["/bin/ash", "-euo", "pipefail", "-c"]
 RUN <<'EOF'
 set -euo pipefail
 
+# ipmi_exporter names its builds by go's architecture names, not the distribution's
+case "$(apk --print-arch)" in
+  x86_64) IPMIEXPORTER_ARCH="amd64" ;;
+  aarch64) IPMIEXPORTER_ARCH="arm64" ;;
+  *) echo "no ipmi_exporter build is published for $(apk --print-arch)" >&2; exit 1 ;;
+esac
+
 IPMIEXPORTER_RELEASE="https://github.com/prometheus-community/ipmi_exporter/releases/download/v${IPMIEXPORTER_VERSION}"
-IPMIEXPORTER_TARBALL="ipmi_exporter-${IPMIEXPORTER_VERSION}.linux-${ARCH}.tar.gz"
+IPMIEXPORTER_TARBALL="ipmi_exporter-${IPMIEXPORTER_VERSION}.linux-${IPMIEXPORTER_ARCH}.tar.gz"
 FREEIPMI_RELEASE="https://ftp.gnu.org/gnu/freeipmi"
 FREEIPMI_TARBALL="freeipmi-${FREEIPMI_VERSION}.tar.gz"
 
