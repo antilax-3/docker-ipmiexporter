@@ -20,7 +20,6 @@ WORKDIR /app
 
 # copy local files
 COPY root/ /
-COPY freeipmi-argp-redefine.patch /tmp/
 
 SHELL ["/bin/ash", "-euo", "pipefail", "-c"]
 
@@ -38,12 +37,12 @@ apk add --no-cache \
 
 echo "**** install build packages ****"
 apk add --no-cache --virtual=build-dependencies \
+  argp-standalone \
   curl \
   gcc \
   libgcrypt-dev \
   make \
-  musl-dev \
-  patch
+  musl-dev
 
 cd /tmp
 
@@ -55,9 +54,8 @@ echo "**** install freeipmi ****"
 curl -fsSLO "${FREEIPMI_RELEASE}/${FREEIPMI_TARBALL}"
 tar -xzf "${FREEIPMI_TARBALL}"
 cd "freeipmi-${FREEIPMI_VERSION}"
-# musl has no argp, so freeipmi compiles its bundled copy, which defines the fmtstream helpers inline in a header
-# and again in its source. Under c99 inline rules those are redefinitions, and the patch keeps only the header's.
-patch -p 0 < /tmp/freeipmi-argp-redefine.patch
+# musl has no argp, and freeipmi's bundled fallback no longer compiles, so it links the static argp-standalone
+# instead, as alpine's own freeipmi package does.
 ./configure
 make -j"$(nproc)"
 make install
