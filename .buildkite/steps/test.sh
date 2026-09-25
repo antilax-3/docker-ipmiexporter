@@ -13,8 +13,13 @@ case "${PLATFORM}" in
   armv7) APK_ARCH="armv7"; ELF_MACHINE="40" ;;
 esac
 
-# The user database is read out of /etc/passwd rather than through getent, which not every base ships.
+# The variants differ in libc, in the interpreter every binary is linked against, and in which packages the build
+# needs. Wolfi also ships no getent, so the user database is read out of /etc/passwd, which both bases have.
 case "${VARIANT}" in
+  wolfi)
+    OS_ID="wolfi"; LIBC="glibc"; INTERPRETER="/lib/ld-linux-*"
+    RUNTIME_PACKAGES="libgcrypt"; BUILD_PACKAGES="curl gcc glibc-dev gnupg-dirmngr gpg libgcrypt-dev make"
+    ;;
   alpine)
     OS_ID="alpine"; LIBC="musl"; INTERPRETER="/lib/ld-musl-*"
     RUNTIME_PACKAGES="libgcrypt"; BUILD_PACKAGES="argp-standalone curl gcc gnupg libgcrypt-dev make musl-dev"

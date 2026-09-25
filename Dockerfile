@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
-FROM antilax3/alpine:latest
+ARG BASE_IMAGE="antilax3/wolfi:latest"
+FROM ${BASE_IMAGE}
 
 # set version label
 ARG build_date
@@ -56,19 +57,23 @@ IPMIEXPORTER_TARBALL="ipmi_exporter-${IPMIEXPORTER_VERSION}.linux-${IPMIEXPORTER
 FREEIPMI_RELEASE="https://ftp.gnu.org/gnu/freeipmi"
 FREEIPMI_TARBALL="freeipmi-${FREEIPMI_VERSION}.tar.gz"
 
+# The image is built on both a musl and a glibc base, which package the toolchain and gnupg differently: alpine
+# ships gnupg under that name with its keyserver client, and musl-dev for the c library headers, while wolfi names
+# the gnupg package gpg, splits its keyserver client into gnupg-dirmngr, and ships the headers in glibc-dev. musl
+# also has no argp, which is why only that build needs argp-standalone.
+if ls /lib/ld-musl-* > /dev/null 2>&1; then
+  BUILD_PACKAGES="argp-standalone curl gcc gnupg libgcrypt-dev make musl-dev"
+else
+  BUILD_PACKAGES="curl gcc glibc-dev gnupg-dirmngr gpg libgcrypt-dev make"
+fi
+
 echo "**** install runtime packages ****"
 apk add --no-cache \
   libgcrypt
 
 echo "**** install build packages ****"
-apk add --no-cache --virtual=build-dependencies \
-  argp-standalone \
-  curl \
-  gcc \
-  gnupg \
-  libgcrypt-dev \
-  make \
-  musl-dev
+# shellcheck disable=SC2086 # the package list is deliberately word split.
+apk add --no-cache --virtual=build-dependencies ${BUILD_PACKAGES}
 
 cd /tmp
 
@@ -93,8 +98,8 @@ gpg --batch --verify "${FREEIPMI_TARBALL}.sig" "${FREEIPMI_TARBALL}"
 gpgconf --kill all
 tar -xzf "${FREEIPMI_TARBALL}"
 cd "freeipmi-${FREEIPMI_VERSION}"
-# musl has no argp, and freeipmi's bundled fallback no longer compiles, so it links the static argp-standalone
-# instead, as alpine's own freeipmi package does.
+# On musl, which has no argp, freeipmi's bundled fallback no longer compiles, so it links the static argp-standalone
+# instead, as alpine's own freeipmi package does. glibc provides argp itself.
 ./configure
 make -j"$(nproc)"
 make install
