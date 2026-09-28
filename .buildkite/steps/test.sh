@@ -17,12 +17,12 @@ esac
 case "${VARIANT}" in
   alpine)
     OS_ID="alpine"; LIBC="musl"; INTERPRETER="/lib/ld-musl-*"
-    RUNTIME_PACKAGES="libgcrypt-dev"; BUILD_PACKAGES="curl gcc make musl-dev patch"
+    RUNTIME_PACKAGES="libgcrypt"; BUILD_PACKAGES="argp-standalone curl gcc libgcrypt-dev make musl-dev"
     ;;
 esac
 
 REVISION="${BUILDKITE_COMMIT}"
-FREEIPMI_RELEASE=$(sed -nE 's/^ARG FREEIPMI_VER="(.*)"$/\1/p' "${DOCKERFILE}")
+FREEIPMI_RELEASE=$(sed -nE 's/^ARG FREEIPMI_VERSION="(.*)"$/\1/p' "${DOCKERFILE}")
 # The freeipmi tools ipmi_exporter shells out to, one per collector.
 FREEIPMI_TOOLS="bmc-info ipmi-chassis ipmi-dcmi ipmi-raw ipmi-sel ipmi-sensors ipmimonitoring"
 MARKER="__TEST_OUTPUT__"

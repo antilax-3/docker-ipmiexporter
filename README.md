@@ -52,11 +52,7 @@ Linting runs locally through [lefthook](https://github.com/evilmartians/lefthook
 lefthook install
 ```
 
-`pre-commit` runs [editorconfig-checker](https://github.com/editorconfig-checker/editorconfig-checker),
-[hadolint](https://github.com/hadolint/hadolint), `jq`, [shellcheck](https://github.com/koalaman/shellcheck),
-[typos](https://github.com/crate-ci/typos) and [yamllint](https://github.com/adrienverge/yamllint) over the staged
-files, and `commit-msg` enforces [Conventional Commits](https://www.conventionalcommits.org). Run everything on demand
-with:
+`pre-commit` runs [editorconfig-checker](https://github.com/editorconfig-checker/editorconfig-checker), [hadolint](https://github.com/hadolint/hadolint), `jq`, [shellcheck](https://github.com/koalaman/shellcheck), [typos](https://github.com/crate-ci/typos) and [yamllint](https://github.com/adrienverge/yamllint) over the staged files, and `commit-msg` enforces [Conventional Commits](https://www.conventionalcommits.org). Run everything on demand with:
 
 ```bash
 lefthook run pre-commit --all-files
@@ -64,9 +60,7 @@ lefthook run pre-commit --all-files
 
 ### Bumping ipmi_exporter and FreeIPMI
 
-`IPMIEXPORTER_VERSION` and `FREEIPMI_VER` are managed by renovate. ipmi_exporter resolves through its GitHub
-releases, and FreeIPMI through the release listing on [ftp.gnu.org](https://ftp.gnu.org/gnu/freeipmi/), which is
-also where the Dockerfile downloads it from. The image tags follow the ipmi_exporter release.
+`IPMIEXPORTER_VERSION` and `FREEIPMI_VERSION` are managed by renovate. ipmi_exporter resolves through its GitHub releases, and FreeIPMI through the release listing on [ftp.gnu.org](https://ftp.gnu.org/gnu/freeipmi/), which is also where the Dockerfile downloads it from. The image tags follow the ipmi_exporter release.
 
 ## Version
 - **04/07/25:** Updated to use alpine 3.22 image and s6 v3 service structure
