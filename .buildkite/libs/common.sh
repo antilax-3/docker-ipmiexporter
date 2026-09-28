@@ -15,13 +15,13 @@ REPOSITORY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 GITHUB_REPOSITORY="antilax-3/docker-ipmiexporter"
 DOCKER_REPOSITORY="antilax3/ipmi-exporter"
 REGISTRY="docker.io"
-# Platforms every image is built for, by the short name used in test step keys and labels. The Dockerfile downloads
-# the amd64 ipmi_exporter release, so no other platform can be built yet.
-PLATFORMS="amd64"
+# Platforms every image is built for, by the short name used in test step keys and labels. armv7 is absent because
+# antilax3/wolfi, like the wolfi-base image beneath it, publishes amd64 and arm64 only.
+PLATFORMS="amd64 arm64"
 # Base images every variant is built on, in tag order. The first is the default variant and takes the unsuffixed
 # tags; the others take a tag suffix of their own name, following the docker-library convention.
-VARIANTS="alpine"
-DEFAULT_VARIANT="alpine"
+VARIANTS="wolfi alpine"
+DEFAULT_VARIANT="wolfi"
 
 DOCKERFILE="${REPOSITORY_ROOT}/Dockerfile"
 # The ipmi_exporter release, e.g. 1.10.0, from the Dockerfile's IPMIEXPORTER_VERSION build arg, and its series (1.10)
@@ -41,6 +41,7 @@ fi
 # Prints the base image a variant is built on.
 variant_base() {
   case "${1}" in
+    wolfi) echo "antilax3/wolfi:latest" ;;
     alpine) echo "antilax3/alpine:latest" ;;
   esac
 }
@@ -83,7 +84,7 @@ sanitize_tag() {
 #               and always BK<build>
 #
 # Every tag of a non-default variant carries that variant's suffix, except the one standing in for latest, which is
-# the bare variant name: a wolfi variant alongside a default alpine would be wolfi, 1-wolfi, 1.10-wolfi, 1.10.0-wolfi.
+# the bare variant name: the alpine variant of the above is alpine, 1-alpine, 1.10-alpine, 1.10.0-alpine.
 #
 # $1 - the variant, defaulting to DEFAULT_VARIANT
 resolve_image() {

@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
-FROM antilax3/alpine:latest
+ARG BASE_IMAGE="antilax3/wolfi:latest"
+FROM ${BASE_IMAGE}
 
 # set version label
 ARG build_date
@@ -9,7 +10,6 @@ LABEL version="${version}"
 LABEL maintainer="Nightah"
 
 # set versions for ipmi_exporter and freeipmi
-ARG ARCH="amd64"
 # renovate: datasource=github-releases depName=ipmi_exporter packageName=prometheus-community/ipmi_exporter
 ARG IPMIEXPORTER_VERSION="1.10.1"
 # renovate: datasource=custom.freeipmi depName=freeipmi
@@ -26,36 +26,80 @@ SHELL ["/bin/ash", "-euo", "pipefail", "-c"]
 RUN <<'EOF'
 set -euo pipefail
 
+# the key freeipmi's maintainer signs its releases with, as listed in the gnu keyring
+FREEIPMI_KEY="A865A9FB6F0387624468543A3EFB7C4BE8303927"
+
+# Imports one key from the first keyserver that returns a usable copy. keys.openpgp.org serves keys with their user
+# IDs stripped until the address is verified, and gnupg skips a key with no user ID while still exiting zero, so a
+# keyserver has only worked once the key is listed.
+recv_key() {
+  local key="${1}" keyserver
+
+  for keyserver in keys.openpgp.org keyserver.ubuntu.com; do
+    gpg --batch --keyserver "${keyserver}" --recv-keys "${key}" || true
+    if gpg --batch --list-keys "${key}" > /dev/null 2>&1; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+# ipmi_exporter names its builds by go's architecture names, not the distribution's
+case "$(apk --print-arch)" in
+  x86_64) IPMIEXPORTER_ARCH="amd64" ;;
+  aarch64) IPMIEXPORTER_ARCH="arm64" ;;
+  *) echo "no ipmi_exporter build is published for $(apk --print-arch)" >&2; exit 1 ;;
+esac
+
 IPMIEXPORTER_RELEASE="https://github.com/prometheus-community/ipmi_exporter/releases/download/v${IPMIEXPORTER_VERSION}"
-IPMIEXPORTER_TARBALL="ipmi_exporter-${IPMIEXPORTER_VERSION}.linux-${ARCH}.tar.gz"
+IPMIEXPORTER_TARBALL="ipmi_exporter-${IPMIEXPORTER_VERSION}.linux-${IPMIEXPORTER_ARCH}.tar.gz"
 FREEIPMI_RELEASE="https://ftp.gnu.org/gnu/freeipmi"
 FREEIPMI_TARBALL="freeipmi-${FREEIPMI_VERSION}.tar.gz"
+
+# The image is built on both a musl and a glibc base, which package the toolchain and gnupg differently: alpine
+# ships gnupg under that name with its keyserver client, and musl-dev for the c library headers, while wolfi names
+# the gnupg package gpg, splits its keyserver client into gnupg-dirmngr, and ships the headers in glibc-dev. musl
+# also has no argp, which is why only that build needs argp-standalone.
+if ls /lib/ld-musl-* > /dev/null 2>&1; then
+  BUILD_PACKAGES="argp-standalone curl gcc gnupg libgcrypt-dev make musl-dev"
+else
+  BUILD_PACKAGES="curl gcc glibc-dev gnupg-dirmngr gpg libgcrypt-dev make"
+fi
 
 echo "**** install runtime packages ****"
 apk add --no-cache \
   libgcrypt
 
 echo "**** install build packages ****"
-apk add --no-cache --virtual=build-dependencies \
-  argp-standalone \
-  curl \
-  gcc \
-  libgcrypt-dev \
-  make \
-  musl-dev
+# shellcheck disable=SC2086 # the package list is deliberately word split.
+apk add --no-cache --virtual=build-dependencies ${BUILD_PACKAGES}
 
 cd /tmp
 
+GNUPGHOME="$(mktemp -d)"
+export GNUPGHOME
+
 echo "**** install ipmi_exporter ****"
+# The exporter publishes its checksums unsigned beside the release, so the manifest is trusted over https alone.
+curl -fsSLO "${IPMIEXPORTER_RELEASE}/sha256sums.txt"
 curl -fsSLO "${IPMIEXPORTER_RELEASE}/${IPMIEXPORTER_TARBALL}"
+grep " ${IPMIEXPORTER_TARBALL}$" sha256sums.txt | sha256sum -c -
 tar -xzf "${IPMIEXPORTER_TARBALL}" -C /app --strip-components=1
 
 echo "**** install freeipmi ****"
+if ! recv_key "${FREEIPMI_KEY}"; then
+  echo "no keyserver returned a usable copy of the freeipmi signing key ${FREEIPMI_KEY}" >&2
+  exit 1
+fi
 curl -fsSLO "${FREEIPMI_RELEASE}/${FREEIPMI_TARBALL}"
+curl -fsSLO "${FREEIPMI_RELEASE}/${FREEIPMI_TARBALL}.sig"
+gpg --batch --verify "${FREEIPMI_TARBALL}.sig" "${FREEIPMI_TARBALL}"
+gpgconf --kill all
 tar -xzf "${FREEIPMI_TARBALL}"
 cd "freeipmi-${FREEIPMI_VERSION}"
-# musl has no argp, and freeipmi's bundled fallback no longer compiles, so it links the static argp-standalone
-# instead, as alpine's own freeipmi package does.
+# On musl, which has no argp, freeipmi's bundled fallback no longer compiles, so it links the static argp-standalone
+# instead, as alpine's own freeipmi package does. glibc provides argp itself.
 ./configure
 make -j"$(nproc)"
 make install
@@ -65,6 +109,7 @@ echo "**** cleanup ****"
 apk del --purge \
   build-dependencies
 rm -rf \
+  "${GNUPGHOME}" \
   /tmp/*
 EOF
 
