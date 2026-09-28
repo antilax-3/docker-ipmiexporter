@@ -1,0 +1,50 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(build)",
+    ":separatePatchReleases"
+  ],
+  "ignorePresets": [
+    ":semanticPrefixFixDepsChoreOthers"
+  ],
+  "customDatasources": {
+    "freeipmi": {
+      "description": "FreeIPMI publishes its releases as tarballs on the GNU ftp server and nowhere renovate has a datasource for.",
+      "defaultRegistryUrlTemplate": "https://ftp.gnu.org/gnu/freeipmi/",
+      "format": "html"
+    }
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update Dockerfile ARG versions annotated with a preceding '# renovate: datasource=<datasource> depName=<depName>' comment, e.g. freeipmi. A packageName after the depName keeps a long lookup path out of the commit subject.",
+      "managerFilePatterns": [
+        "/(^|/)Dockerfile$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( packageName=(?<packageName>\\S+))?\\s+ARG [A-Z_]+=\"(?<currentValue>[^\"]+)\""
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "ipmi_exporter tags releases as v<major>.<minor>.<patch>.",
+      "matchDatasources": [
+        "github-releases"
+      ],
+      "matchPackageNames": [
+        "prometheus-community/ipmi_exporter"
+      ],
+      "extractVersion": "^v(?<version>.+)$"
+    },
+    {
+      "description": "The FreeIPMI release listing links every tarball and its signature; only the tarball names carry a version.",
+      "matchDatasources": [
+        "custom.freeipmi"
+      ],
+      "extractVersion": "^freeipmi-(?<version>\\d+\\.\\d+\\.\\d+)\\.tar\\.gz$"
+    }
+  ]
+}
