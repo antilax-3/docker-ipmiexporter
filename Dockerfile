@@ -11,7 +11,7 @@ LABEL maintainer="Nightah"
 # set versions for ipmi_exporter and freeipmi
 ARG ARCH="amd64"
 # renovate: datasource=github-releases depName=ipmi_exporter packageName=prometheus-community/ipmi_exporter
-ARG IPMIEXPORTER_VERSION="1.10.0"
+ARG IPMIEXPORTER_VERSION="1.10.1"
 # renovate: datasource=custom.freeipmi depName=freeipmi
 ARG FREEIPMI_VERSION="1.6.19"
 
