@@ -18,11 +18,11 @@ esac
 case "${VARIANT}" in
   wolfi)
     OS_ID="wolfi"; LIBC="glibc"; INTERPRETER="/lib/ld-linux-*"
-    RUNTIME_PACKAGES="libgcrypt"; BUILD_PACKAGES="curl gcc glibc-dev gnupg-dirmngr gpg libgcrypt-dev make"
+    RUNTIME_PACKAGES="libgcrypt"; BUILD_PACKAGES="clang curl gcc glibc-dev gnupg-dirmngr gpg libgcrypt-dev lld llvm make"
     ;;
   alpine)
     OS_ID="alpine"; LIBC="musl"; INTERPRETER="/lib/ld-musl-*"
-    RUNTIME_PACKAGES="libgcrypt"; BUILD_PACKAGES="argp-standalone curl gcc gnupg libgcrypt-dev make musl-dev"
+    RUNTIME_PACKAGES="libgcrypt"; BUILD_PACKAGES="argp-standalone clang curl gcc gnupg libgcrypt-dev lld llvm make musl-dev"
     ;;
 esac
 
