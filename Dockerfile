@@ -7,8 +7,6 @@ ARG IPMIEXPORTER_VERSION="1.10.1"
 # renovate: datasource=custom.freeipmi depName=freeipmi
 ARG FREEIPMI_VERSION="1.6.19"
 
-# Everything is downloaded, verified and compiled on the build platform. freeipmi is cross-compiled with clang against
-# a sysroot of the target's packages, so an arm64 image no longer compiles under qemu emulation.
 FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE} AS build
 
 ARG TARGETARCH
@@ -23,9 +21,6 @@ set -euo pipefail
 # the key freeipmi's maintainer signs its releases with, as listed in the gnu keyring
 FREEIPMI_KEY="A865A9FB6F0387624468543A3EFB7C4BE8303927"
 
-# Imports one key from the first keyserver that returns a usable copy. keys.openpgp.org serves keys with their user
-# IDs stripped until the address is verified, and gnupg skips a key with no user ID while still exiting zero, so a
-# keyserver has only worked once the key is listed.
 recv_key() {
   local key="${1}" keyserver
 
@@ -51,12 +46,6 @@ IPMIEXPORTER_TARBALL="ipmi_exporter-${IPMIEXPORTER_VERSION}.linux-${TARGETARCH}.
 FREEIPMI_RELEASE="https://ftp.gnu.org/gnu/freeipmi"
 FREEIPMI_TARBALL="freeipmi-${FREEIPMI_VERSION}.tar.gz"
 
-# The image is built on both a musl and a glibc base, which name their toolchain triples, gnupg and c library headers
-# differently: alpine ships gnupg under that name with its keyserver client and the headers in musl-dev, while wolfi
-# names the gnupg package gpg, splits its keyserver client into gnupg-dirmngr, and ships the headers in glibc-dev. On
-# musl, which has no argp, freeipmi's bundled fallback no longer compiles, so it links the static argp-standalone
-# instead, as alpine's own freeipmi package does. The target's gcc is installed into the sysroot for its crt objects
-# and libgcc, not to be run.
 if ls /lib/ld-musl-* > /dev/null 2>&1; then
   TARGET_TRIPLE="${TARGET_APK_ARCH}-alpine-linux-musl"
   BUILD_PACKAGES="clang curl gnupg lld llvm make"
@@ -75,9 +64,6 @@ echo "**** install build packages ****"
 apk add --no-cache ${BUILD_PACKAGES}
 
 echo "**** create ${TARGET_TRIPLE} sysroot ****"
-# apk unpacks the target's packages without running them. alpine signs each architecture's index with its own keys,
-# which it ships under /usr/share/apk/keys, while the repositories this base was built from may be signed by the
-# keys in /etc/apk/keys, so both sets are trusted.
 mkdir -p /tmp/keys
 for key in /etc/apk/keys/* "/usr/share/apk/keys/${TARGET_APK_ARCH}"/*; do
   cp "${key}" /tmp/keys/
@@ -110,9 +96,6 @@ gpg --batch --verify "${FREEIPMI_TARBALL}.sig" "${FREEIPMI_TARBALL}"
 gpgconf --kill all
 tar -xzf "${FREEIPMI_TARBALL}"
 cd "freeipmi-${FREEIPMI_VERSION}"
-# configure cannot run what it builds for another architecture, so the three checks that need to are answered with
-# what a native configure finds on both bases: a working mmap, which freeipmi uses to read the dmi table when
-# locating the bmc, and the two random devices. CPP_FOR_BUILD only preprocesses the man pages on the build machine.
 ./configure \
   --build="$(clang -dumpmachine)" \
   --host="${TARGET_TRIPLE}" \
@@ -127,7 +110,6 @@ cd "freeipmi-${FREEIPMI_VERSION}"
   ac_cv_file__dev_random="yes" \
   ac_cv_file__dev_urandom="yes"
 make -j"$(nproc)"
-# install-strip drops the debug info and symbol tables through the target's llvm-strip given to configure
 make install-strip DESTDIR=/out
 EOF
 
