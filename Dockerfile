@@ -1,4 +1,4 @@
-FROM antilax3/alpine
+FROM antilax3/alpine:latest
 
 # set version label
 ARG build_date
@@ -23,11 +23,11 @@ COPY freeipmi-argp-redefine.patch /tmp/freeipmi-${FREEIPMI_VER}/
 RUN \
   echo "**** install build packages ****" && \
     apk add --no-cache --virtual=build-dependencies \
-	  curl \
-	  gcc \
-	  make \
-	  musl-dev \
-	  patch && \
+      curl \
+      gcc \
+      make \
+      musl-dev \
+      patch && \
   echo "**** install runtime packages ****" && \
     apk add --no-cache \
       libgcrypt-dev && \
@@ -43,7 +43,7 @@ RUN \
     make install && \
 echo "**** Cleanup ****" && \
     apk del --purge \
-	  build-dependencies && \
+      build-dependencies && \
     rm -rf /tmp/*
 
 # ports and volumes
