@@ -144,8 +144,8 @@ LABEL maintainer="Nightah"
 WORKDIR /app
 
 # copy local files
-COPY root/ /
-COPY --from=build /out/ /
+COPY --link root/ /
+COPY --link --from=build /out/ /
 
 # install runtime packages
 RUN apk add --no-cache \
