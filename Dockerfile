@@ -5,7 +5,7 @@ ARG BASE_IMAGE="antilax3/wolfi:latest"
 # renovate: datasource=github-releases depName=ipmi_exporter packageName=prometheus-community/ipmi_exporter
 ARG IPMIEXPORTER_VERSION="1.10.1"
 # renovate: datasource=custom.freeipmi depName=freeipmi
-ARG FREEIPMI_VERSION="1.6.19"
+ARG FREEIPMI_VERSION="1.6.20"
 
 FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE} AS build
 
